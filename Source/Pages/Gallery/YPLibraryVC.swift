@@ -27,7 +27,7 @@ public class YPVideoLibraryVC:YPLibraryVC{
     public override func viewDidLoad() {
         v.isSingleSelection = true
         super.viewDidLoad()
-        
+        title = "视频库"
     }
     override func checkPermission() {
         super.checkPermission()
