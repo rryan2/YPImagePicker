@@ -8,7 +8,41 @@
 
 import UIKit
 import Photos
-
+public class YPPhotoLibraryVC:YPLibraryVC{
+    override func checkPermission() {
+        super.checkPermission()
+    }
+    override func buildPHFetchOptions() -> PHFetchOptions {
+        // Sorting condition
+        if let userOpt = YPConfig.library.options {
+            return userOpt
+        }
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.predicate = YPlibraryMediaType.photo.predicate()
+        return options
+    }
+}
+public class YPVideoLibraryVC:YPLibraryVC{
+    public override func viewDidLoad() {
+        v.isSingleSelection = true
+        super.viewDidLoad()
+        
+    }
+    override func checkPermission() {
+        super.checkPermission()
+    }
+    override func buildPHFetchOptions() -> PHFetchOptions {
+        // Sorting condition
+        if let userOpt = YPConfig.library.options {
+            return userOpt
+        }
+        let options = PHFetchOptions()
+        options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        options.predicate = YPlibraryMediaType.video.predicate()
+        return options
+    }
+}
 public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     
     internal weak var delegate: YPLibraryViewDelegate?
@@ -56,8 +90,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         panGestureHelper.registerForPanGesture(on: v)
         registerForTapOnPreview()
         refreshMediaRequest()
-
-        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
+//
+//        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
         v.maxNumberWarningLabel.text = String(format: YPConfig.wordings.warningMaxItemsLimit,
 											  YPConfig.library.maxNumberOfItems)
         
@@ -108,6 +142,15 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
 
             strongSelf.updateCropInfo()
         }
+        if !v.isSingleSelection{
+            v.assetViewContainer.multipleSelectionButton
+                .addTarget(self,
+                           action: #selector(multipleSelectionButtonTapped),
+                           for: .touchUpInside)
+            v.assetViewContainer.multipleSelectionButton.isHidden = false
+        }else{
+            v.assetViewContainer.multipleSelectionButton.isHidden = true
+        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
@@ -116,10 +159,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         v.assetViewContainer.squareCropButton
             .addTarget(self,
                        action: #selector(squareCropButtonTapped),
-                       for: .touchUpInside)
-        v.assetViewContainer.multipleSelectionButton
-            .addTarget(self,
-                       action: #selector(multipleSelectionButtonTapped),
                        for: .touchUpInside)
         
         // Forces assetZoomableView to have a contentSize.

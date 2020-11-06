@@ -24,7 +24,7 @@ final class YPLibraryView: UIView {
     let progressView = UIProgressView()
     let line = UIView()
     var shouldShowLoader = false
-    
+    var isSingleSelection = false
     override func awakeFromNib() {
         super.awakeFromNib()
         

@@ -34,9 +34,13 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         case library
         case camera
         case video
+        case photoLibrary
+        case videoLibrary
     }
     
     private var libraryVC: YPLibraryVC?
+    private var photoLibraryVC:YPPhotoLibraryVC?
+    private var videoLibraryVC:YPVideoLibraryVC?
     private var cameraVC: YPCameraVC?
     private var videoVC: YPVideoCaptureVC?
     
@@ -57,11 +61,18 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         }
         
         // Library
-        if YPConfig.screens.contains(.library) {
+        if YPConfig.screens.contains(.library)  {
             libraryVC = YPLibraryVC()
             libraryVC?.delegate = self
         }
-        
+        if YPConfig.screens.contains(.photoLibrary)  {
+            photoLibraryVC = YPPhotoLibraryVC()
+            photoLibraryVC?.delegate = self
+        }
+        if YPConfig.screens.contains(.videoLibrary)  {
+            videoLibraryVC = YPVideoLibraryVC()
+            videoLibraryVC?.delegate = self
+        }
         // Camera
         if YPConfig.screens.contains(.photo) {
             cameraVC = YPCameraVC()
@@ -86,6 +97,14 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         var vcs = [UIViewController]()
         for screen in YPConfig.screens {
             switch screen {
+            case .photoLibrary:
+                if let photoLibraryVC = photoLibraryVC {
+                    vcs.append(photoLibraryVC)
+                }
+            case .videoLibrary:
+                if let videoLibraryVC = videoLibraryVC {
+                    vcs.append(videoLibraryVC)
+                }
             case .library:
                 if let libraryVC = libraryVC {
                     vcs.append(libraryVC)
@@ -101,7 +120,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             }
         }
         controllers = vcs
-        
+        print(controllers)
         // Select good mode
         if YPConfig.screens.contains(YPConfig.startOnScreen) {
             switch YPConfig.startOnScreen {
@@ -111,6 +130,10 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
                 mode = .camera
             case .video:
                 mode = .video
+            case .photoLibrary:
+                mode = .photoLibrary
+            case .videoLibrary:
+                mode = .videoLibrary
             }
         }
         
@@ -143,6 +166,10 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     
     func modeFor(vc: UIViewController) -> Mode {
         switch vc {
+        case is YPPhotoLibraryVC:
+            return .photoLibrary
+        case is YPVideoLibraryVC:
+            return .videoLibrary
         case is YPLibraryVC:
             return .library
         case is YPCameraVC:
@@ -171,6 +198,10 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             cameraVC.start()
         } else if let videoVC = vc as? YPVideoCaptureVC {
             videoVC.start()
+        }  else if let vc = vc as? YPPhotoLibraryVC {
+            vc.checkPermission()
+        } else if let vc = vc as? YPVideoLibraryVC {
+            vc.checkPermission()
         }
     
         updateUI()
@@ -184,6 +215,10 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             cameraVC?.stopCamera()
         case .video:
             videoVC?.stopCamera()
+        case .photoLibrary:
+            break
+        case .videoLibrary:
+            libraryVC?.pausePlayer()
         }
     }
     
@@ -198,13 +233,23 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         let vc = YPAlbumVC(albumsManager: albumsManager)
         let navVC = UINavigationController(rootViewController: vc)
         navVC.navigationBar.tintColor = .ypLabel
-        
-        vc.didSelectAlbum = { [weak self] album in
-            self?.libraryVC?.setAlbum(album)
-            self?.setTitleViewWithTitle(aTitle: album.title)
-            navVC.dismiss(animated: true, completion: nil)
+        if mode == .photoLibrary{
+            vc.didSelectAlbum = { [weak self] album in
+                self?.photoLibraryVC?.setAlbum(album)
+                self?.setTitleViewWithTitle(aTitle: album.title)
+                navVC.dismiss(animated: true, completion: nil)
+            }
+            present(navVC, animated: true, completion: nil)
         }
-        present(navVC, animated: true, completion: nil)
+        if mode == .videoLibrary{
+            vc.didSelectAlbum = { [weak self] album in
+                self?.videoLibraryVC!.setAlbum(album)
+                self?.setTitleViewWithTitle(aTitle: album.title)
+                navVC.dismiss(animated: true, completion: nil)
+            }
+            present(navVC, animated: true, completion: nil)
+        }
+        
     }
     
     func setTitleViewWithTitle(aTitle: String) {
@@ -288,6 +333,28 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             navigationItem.titleView = nil
             title = videoVC?.title
             navigationItem.rightBarButtonItem = nil
+        case .photoLibrary:
+            setTitleViewWithTitle(aTitle: photoLibraryVC?.title ?? "")
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: YPConfig.wordings.next,
+                                                                style: .done,
+                                                                target: self,
+                                                                action: #selector(done))
+            navigationItem.rightBarButtonItem?.tintColor = YPConfig.colors.tintColor
+
+            // Disable Next Button until minNumberOfItems is reached.
+            navigationItem.rightBarButtonItem?.isEnabled =
+                photoLibraryVC!.selection.count >= YPConfig.library.minNumberOfItems
+        case .videoLibrary:
+            setTitleViewWithTitle(aTitle: videoLibraryVC?.title ?? "")
+            navigationItem.rightBarButtonItem = UIBarButtonItem(title: YPConfig.wordings.next,
+                                                                style: .done,
+                                                                target: self,
+                                                                action: #selector(done))
+            navigationItem.rightBarButtonItem?.tintColor = YPConfig.colors.tintColor
+
+            // Disable Next Button until minNumberOfItems is reached.
+            navigationItem.rightBarButtonItem?.isEnabled =
+                videoLibraryVC!.selection.count >= YPConfig.library.minNumberOfItems
         }
 
         navigationItem.rightBarButtonItem?.setFont(font: YPConfig.fonts.rightBarButtonFont, forState: .normal)
@@ -307,9 +374,35 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     // When pressing "Next"
     @objc
     func done() {
-        guard let libraryVC = libraryVC else { print("⚠️ YPPickerVC >>> YPLibraryVC deallocated"); return }
         
         if mode == .library {
+            guard let libraryVC = libraryVC else { print("⚠️ YPPickerVC >>> YPLibraryVC deallocated"); return }
+            libraryVC.doAfterPermissionCheck { [weak self] in
+                libraryVC.selectedMedia(photoCallback: { photo in
+                    self?.didSelectItems?([YPMediaItem.photo(p: photo)])
+                }, videoCallback: { video in
+                    self?.didSelectItems?([YPMediaItem
+                        .video(v: video)])
+                }, multipleItemsCallback: { items in
+                    self?.didSelectItems?(items)
+                })
+            }
+        }
+        else if mode == .photoLibrary {
+            guard let libraryVC = photoLibraryVC else { print("⚠️ YPPickerVC >>> YPLibraryVC deallocated"); return }
+            libraryVC.doAfterPermissionCheck { [weak self] in
+                libraryVC.selectedMedia(photoCallback: { photo in
+                    self?.didSelectItems?([YPMediaItem.photo(p: photo)])
+                }, videoCallback: { video in
+                    self?.didSelectItems?([YPMediaItem
+                        .video(v: video)])
+                }, multipleItemsCallback: { items in
+                    self?.didSelectItems?(items)
+                })
+            }
+        }
+        else if mode == .videoLibrary {
+            guard let libraryVC = videoLibraryVC else { print("⚠️ YPPickerVC >>> YPLibraryVC deallocated"); return }
             libraryVC.doAfterPermissionCheck { [weak self] in
                 libraryVC.selectedMedia(photoCallback: { photo in
                     self?.didSelectItems?([YPMediaItem.photo(p: photo)])
