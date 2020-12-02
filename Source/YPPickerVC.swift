@@ -194,7 +194,8 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         // Re-trigger permission check
         if let vc = vc as? YPLibraryVC {
             vc.checkPermission()
-        } else if let cameraVC = vc as? YPCameraVC {
+        }
+        if let cameraVC = vc as? YPCameraVC {
             cameraVC.start()
         } else if let videoVC = vc as? YPVideoCaptureVC {
             videoVC.start()
@@ -202,6 +203,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
             vc.checkPermission()
         } else if let vc = vc as? YPVideoLibraryVC {
             vc.checkPermission()
+            vc.resumePlayer()
         }
     
         updateUI()
@@ -218,7 +220,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
         case .photoLibrary:
             break
         case .videoLibrary:
-            libraryVC?.pausePlayer()
+            videoLibraryVC?.pausePlayer()
         }
     }
     
@@ -305,13 +307,13 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
     }
     
     func updateUI() {
-		if !YPConfig.hidesCancelButton {
-			// Update Nav Bar state.
-			navigationItem.leftBarButtonItem = UIBarButtonItem(title: YPConfig.wordings.cancel,
+        if !YPConfig.hidesCancelButton {
+            // Update Nav Bar state.
+            navigationItem.leftBarButtonItem = UIBarButtonItem(title: YPConfig.wordings.cancel,
                                                            style: .plain,
                                                            target: self,
                                                            action: #selector(close))
-		}
+        }
         switch mode {
         case .library:
             setTitleViewWithTitle(aTitle: libraryVC?.title ?? "")
@@ -323,7 +325,7 @@ open class YPPickerVC: YPBottomPager, YPBottomPagerDelegate {
 
             // Disable Next Button until minNumberOfItems is reached.
             navigationItem.rightBarButtonItem?.isEnabled =
-				libraryVC!.selection.count >= YPConfig.library.minNumberOfItems
+                libraryVC!.selection.count >= YPConfig.library.minNumberOfItems
 
         case .camera:
             navigationItem.titleView = nil
@@ -435,7 +437,7 @@ extension YPPickerVC: YPLibraryViewDelegate {
     }
     
     public func libraryViewStartedLoadingImage() {
-		//TODO remove to enable changing selection while loading but needs cancelling previous image requests.
+        //TODO remove to enable changing selection while loading but needs cancelling previous image requests.
         libraryVC?.isProcessing = true
         DispatchQueue.main.async {
             self.libraryVC?.v.fadeInLoader()

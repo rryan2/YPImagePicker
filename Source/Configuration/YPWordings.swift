@@ -26,6 +26,8 @@ public struct YPWordings {
         public var tooLongMessage = ypLocalized("YPImagePickerVideoTooLong")
     }
     
+    public var photoLibraryTitle = ypLocalized("YPImagePickerPhotoLibrary")
+    public var videoLibraryTitle = ypLocalized("YPImagePickerVideoLibrary")
     public var ok = ypLocalized("YPImagePickerOk")
     public var done = ypLocalized("YPImagePickerDone")
     public var cancel = ypLocalized("YPImagePickerCancel")

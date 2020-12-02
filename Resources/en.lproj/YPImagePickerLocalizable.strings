@@ -5,6 +5,8 @@
 "YPImagePickerDone" = "Done";
 "YPImagePickerFilter" = "Filter";
 "YPImagePickerLibrary" = "Library";
+"YPImagePickerPhotoLibrary" = "Photo Library";
+"YPImagePickerVideoLibrary" = "Video Library";
 "YPImagePickerNext" = "Next";
 "YPImagePickerOk" = "Ok";
 "YPImagePickerPermissionDeniedPopupCancel" = "Cancel";

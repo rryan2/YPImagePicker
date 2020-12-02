@@ -5,6 +5,8 @@
 "YPImagePickerDone" = "完成";
 "YPImagePickerFilter" = "滤镜";
 "YPImagePickerLibrary" = "图库";
+"YPImagePickerPhotoLibrary" = "照片库";
+"YPImagePickerVideoLibrary" = "视频库";
 "YPImagePickerNext" = "下一步";
 "YPImagePickerOk" = "好的";
 "YPImagePickerPermissionDeniedPopupCancel" = "取消";

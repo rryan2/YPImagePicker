@@ -9,6 +9,10 @@
 import UIKit
 import Photos
 public class YPPhotoLibraryVC:YPLibraryVC{
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        title = YPConfig.wordings.photoLibraryTitle
+    }
     override func checkPermission() {
         super.checkPermission()
     }
@@ -27,7 +31,7 @@ public class YPVideoLibraryVC:YPLibraryVC{
     public override func viewDidLoad() {
         v.isSingleSelection = true
         super.viewDidLoad()
-        title = "视频库"
+        title = YPConfig.wordings.videoLibraryTitle
     }
     override func checkPermission() {
         super.checkPermission()
@@ -93,7 +97,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
 //
 //        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
         v.maxNumberWarningLabel.text = String(format: YPConfig.wordings.warningMaxItemsLimit,
-											  YPConfig.library.maxNumberOfItems)
+                                              YPConfig.library.maxNumberOfItems)
         
         if let preselectedItems = YPConfig.library.preselectedItems, !preselectedItems.isEmpty {
             selection = preselectedItems.compactMap { item -> YPLibrarySelection? in
@@ -216,8 +220,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         
         if multipleSelectionEnabled {
             if selection.isEmpty && YPConfig.library.preSelectItemOnMultipleSelection,
-				delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0),
-														  numSelections: selection.count) ?? true {
+                delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0),
+                                                          numSelections: selection.count) ?? true {
                 let asset = mediaManager.fetchResult[currentlySelectedIndex]
                 selection = [
                     YPLibrarySelection(index: currentlySelectedIndex,
@@ -370,7 +374,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         let updateCropInfo = {
             self.updateCropInfo()
         }
-		
+        
         // MARK: add a func(updateCropInfo) after crop multiple
         DispatchQueue.global(qos: .userInitiated).async {
             switch asset.mediaType {
@@ -510,7 +514,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             
             let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selection.map {
                 guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
-													  options: PHFetchOptions()).firstObject else { fatalError() }
+                                                      options: PHFetchOptions()).firstObject else { fatalError() }
                 return (asset, $0.cropRect)
             }
             
@@ -541,7 +545,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                     case .image:
                         self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
                             let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
-													 exifMeta: exifMeta, asset: asset.asset)
+                                                     exifMeta: exifMeta, asset: asset.asset)
                             resultMediaItems.append(YPMediaItem.photo(p: photo))
                             asyncGroup.leave()
                         }
@@ -646,6 +650,10 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     
     func pausePlayer() {
         v.assetZoomableView.videoView.pause()
+    }
+    
+    func resumePlayer(){
+        v.assetZoomableView.videoView.play()
     }
     
     // MARK: - Deinit
