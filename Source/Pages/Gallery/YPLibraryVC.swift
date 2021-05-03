@@ -48,7 +48,7 @@ public class YPVideoLibraryVC:YPLibraryVC{
     }
 }
 public class YPLibraryVC: UIViewController, YPPermissionCheckable {
-    
+    var morePhotoButton:UIButton?
     internal weak var delegate: YPLibraryViewDelegate?
     internal var v: YPLibraryView!
     internal var isProcessing = false // true if video or image is in processing state
@@ -284,12 +284,70 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     // and ask custom popup if denied.
     func checkPermissionToAccessPhotoLibrary(block: @escaping (Bool) -> Void) {
         // Only intilialize picker if photo permission is Allowed by user.
-        let status = PHPhotoLibrary.authorizationStatus()
+        var status:PHAuthorizationStatus
+        if #available(iOS 14, *) {
+            status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        } else {
+            status = PHPhotoLibrary.authorizationStatus()
+        }
         switch status {
         case .authorized:
+            let options = PHFetchOptions()
+            if self is YPVideoLibraryVC{
+                options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                options.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.video.rawValue)
+                
+            }
+            else if self is YPPhotoLibraryVC{
+                options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+                options.predicate = NSPredicate(format: "mediaType = %d", PHAssetMediaType.image.rawValue)
+            }
+            let fetchResult = PHAsset.fetchAssets(with: options)
+            if fetchResult.count == 0 {
+                if #available(iOS 14, *) {
+                    v.hideLoader()
+                    morePhotoButton = UIButton()
+                    morePhotoButton?.removeFromSuperview()
+                    morePhotoButton?.setTitle("访问更多照片", for: .normal)
+                    morePhotoButton?.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+                    morePhotoButton?.layer.cornerRadius = 21
+                    morePhotoButton?.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
+                    v.assetViewContainer.addSubview(morePhotoButton!)
+                    morePhotoButton?.translatesAutoresizingMaskIntoConstraints = false
+                    morePhotoButton?.centerXAnchor.constraint(equalTo: v.assetViewContainer.centerXAnchor, constant: 0).isActive = true
+                    morePhotoButton?.centerYAnchor.constraint(equalTo: v.assetViewContainer.squareCropButton.centerYAnchor, constant: 0).isActive = true
+                    morePhotoButton?.heightAnchor.constraint(equalToConstant: 42).isActive = true
+                    morePhotoButton?.widthAnchor.constraint(equalToConstant:120).isActive = true
+                    morePhotoButton?.addAction(UIAction(handler: { _ in
+                        PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+                        PHPhotoLibrary.shared().register(self)
+                    }), for: .touchUpInside)
+                }
+                PHPhotoLibrary.shared().register(self)
+            }
             block(true)
         #if compiler(>=5.3)
         case .limited:
+            if #available(iOS 14, *) {
+                v.hideLoader()
+                morePhotoButton = UIButton()
+                morePhotoButton?.removeFromSuperview()
+                morePhotoButton?.setTitle("访问更多照片", for: .normal)
+                morePhotoButton?.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+                morePhotoButton?.layer.cornerRadius = 21
+                morePhotoButton?.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 0.4)
+                v.assetViewContainer.addSubview(morePhotoButton!)
+                morePhotoButton?.translatesAutoresizingMaskIntoConstraints = false
+                morePhotoButton?.centerXAnchor.constraint(equalTo: v.assetViewContainer.centerXAnchor, constant: 0).isActive = true
+                morePhotoButton?.centerYAnchor.constraint(equalTo: v.assetViewContainer.squareCropButton.centerYAnchor, constant: 0).isActive = true
+                morePhotoButton?.heightAnchor.constraint(equalToConstant: 42).isActive = true
+                morePhotoButton?.widthAnchor.constraint(equalToConstant:120).isActive = true
+                morePhotoButton?.addAction(UIAction(handler: { _ in
+                    PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
+                    PHPhotoLibrary.shared().register(self)
+                }), for: .touchUpInside)
+            }
+            PHPhotoLibrary.shared().register(self)
             block(true)
         #endif
         case .restricted, .denied:
@@ -327,8 +385,10 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             if !multipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
                 addToSelection(indexPath: IndexPath(row: 0, section: 0))
             }
+            v.assetViewContainer.multipleSelectionButton.isHidden = false
         } else {
             delegate?.noPhotosForOptions()
+            v.assetViewContainer.multipleSelectionButton.isHidden = true
         }
         scrollToTop()
     }
