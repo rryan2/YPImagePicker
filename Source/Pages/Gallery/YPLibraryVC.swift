@@ -307,8 +307,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             if fetchResult.count == 0 {
                 if #available(iOS 14, *) {
                     v.hideLoader()
-                    morePhotoButton = UIButton()
                     morePhotoButton?.removeFromSuperview()
+                    morePhotoButton = UIButton()
                     morePhotoButton?.setTitle("访问更多照片", for: .normal)
                     morePhotoButton?.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
                     morePhotoButton?.layer.cornerRadius = 21
@@ -331,8 +331,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         case .limited:
             if #available(iOS 14, *) {
                 v.hideLoader()
-                morePhotoButton = UIButton()
                 morePhotoButton?.removeFromSuperview()
+                morePhotoButton = UIButton()
                 morePhotoButton?.setTitle("访问更多照片", for: .normal)
                 morePhotoButton?.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
                 morePhotoButton?.layer.cornerRadius = 21
