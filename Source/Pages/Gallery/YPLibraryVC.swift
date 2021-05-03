@@ -60,7 +60,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     internal let mediaManager = LibraryMediaManager()
     internal var latestImageTapped = ""
     internal let panGestureHelper = PanGestureHelper()
-
+    
     // MARK: - Init
     
     public required init(items: [YPMediaItem]?) {
@@ -89,14 +89,14 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     func initialize() {
         mediaManager.initialize()
         mediaManager.v = v
-
+        
         setupCollectionView()
         registerForLibraryChanges()
         panGestureHelper.registerForPanGesture(on: v)
         registerForTapOnPreview()
         refreshMediaRequest()
-//
-//        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
+        //
+        //        v.assetViewContainer.multipleSelectionButton.isHidden = !(YPConfig.library.maxNumberOfItems > 1)
         v.maxNumberWarningLabel.text = String(format: YPConfig.wordings.warningMaxItemsLimit,
                                               YPConfig.library.maxNumberOfItems)
         
@@ -144,7 +144,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             guard let strongSelf = self else {
                 return
             }
-
+            
             strongSelf.updateCropInfo()
         }
         if !v.isSingleSelection{
@@ -197,7 +197,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     }
     
     // MARK: - Multiple Selection
-
+    
     @objc
     func multipleSelectionButtonTapped() {
         doAfterPermissionCheck { [weak self] in
@@ -211,7 +211,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     }
     
     func showMultipleSelection() {
-
+        
         // Prevent desactivating multiple selection when using `minNumberOfItems`
         if YPConfig.library.minNumberOfItems > 1 && multipleSelectionEnabled {
             return
@@ -221,8 +221,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
         
         if multipleSelectionEnabled {
             if selection.isEmpty && YPConfig.library.preSelectItemOnMultipleSelection,
-                delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0),
-                                                          numSelections: selection.count) ?? true {
+               delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0),
+                                                         numSelections: selection.count) ?? true {
                 let asset = mediaManager.fetchResult[currentlySelectedIndex]
                 selection = [
                     YPLibrarySelection(index: currentlySelectedIndex,
@@ -280,7 +280,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             }
         }
     }
-
+    
     // Async beacause will prompt permission if .notDetermined
     // and ask custom popup if denied.
     func checkPermissionToAccessPhotoLibrary(block: @escaping (Bool) -> Void) {
@@ -368,7 +368,13 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             fatalError()
         }
     }
-    
+    func photoLibraryDidChange(_ changeInstance: PHChange) {
+        if let _fetchResult = self.fetchResult, let _ = changeInstance.changeDetails(for: _fetchResult) {
+            DispatchQueue.main.async {
+                self.getPhotos()
+            }
+        }
+    }
     func refreshMediaRequest() {
         let options = buildPHFetchOptions()
         if let collection = mediaManager.collection {
@@ -381,8 +387,8 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             changeAsset(mediaManager.fetchResult[0])
             v.collectionView.reloadData()
             v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
-                                             animated: false,
-                                             scrollPosition: UICollectionView.ScrollPosition())
+                                        animated: false,
+                                        scrollPosition: UICollectionView.ScrollPosition())
             if !multipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
                 addToSelection(indexPath: IndexPath(row: 0, section: 0))
             }
@@ -504,9 +510,9 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
     
     internal func fetchStoredCrop() -> YPLibrarySelection? {
         if self.multipleSelectionEnabled,
-            self.selection.contains(where: { $0.index == self.currentlySelectedIndex }) {
+           self.selection.contains(where: { $0.index == self.currentlySelectedIndex }) {
             guard let selectedAssetIndex = self.selection
-                .firstIndex(where: { $0.index == self.currentlySelectedIndex }) else {
+                    .firstIndex(where: { $0.index == self.currentlySelectedIndex }) else {
                 return nil
             }
             return self.selection[selectedAssetIndex]
@@ -613,7 +619,7 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
                         
                     case .video:
                         self.fetchVideoAndApplySettings(for: asset.asset,
-                                                             withCropRect: asset.cropRect) { videoURL in
+                                                        withCropRect: asset.cropRect) { videoURL in
                             if let videoURL = videoURL {
                                 let videoItem = YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
                                                              videoURL: videoURL, asset: asset.asset)

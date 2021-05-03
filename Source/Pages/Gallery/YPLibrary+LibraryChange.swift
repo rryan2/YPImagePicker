@@ -44,6 +44,20 @@ extension YPLibraryVC: PHPhotoLibraryChangeObserver {
                 }
                 self.mediaManager.resetCachedAssets()
             }
+            if self.mediaManager.hasResultItems {
+                self.changeAsset(self.mediaManager.fetchResult[0])
+                self.v.collectionView.reloadData()
+                self.v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
+                                                 animated: false,
+                                                 scrollPosition: UICollectionView.ScrollPosition())
+                if !self.multipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
+                    self.addToSelection(indexPath: IndexPath(row: 0, section: 0))
+                }
+                self.v.assetViewContainer.multipleSelectionButton.isHidden = false
+            } else {
+                self.delegate?.noPhotosForOptions()
+                self.v.assetViewContainer.multipleSelectionButton.isHidden = true
+            }
         }
     }
 }
