@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import PhotosUI
 import Photos
 public class YPPhotoLibraryVC:YPLibraryVC{
     public override func viewDidLoad() {
