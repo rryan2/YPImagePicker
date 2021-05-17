@@ -368,13 +368,6 @@ public class YPLibraryVC: UIViewController, YPPermissionCheckable {
             fatalError()
         }
     }
-    func photoLibraryDidChange(_ changeInstance: PHChange) {
-        if let _fetchResult = self.fetchResult, let _ = changeInstance.changeDetails(for: _fetchResult) {
-            DispatchQueue.main.async {
-                self.getPhotos()
-            }
-        }
-    }
     func refreshMediaRequest() {
         let options = buildPHFetchOptions()
         if let collection = mediaManager.collection {
